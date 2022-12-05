@@ -1,86 +1,53 @@
 import streamlit as st
-import numpy as np
+import joblib
+import time
 import pandas as pd
+import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
-from collections import OrderedDict
-from sklearn.naive_bayes import GaussianNB
-from sklearn.metrics import confusion_matrix, accuracy_score, recall_score, precision_score, f1_score
 from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.cluster import KMeans
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import BaggingClassifier
-from sklearn.datasets import make_classification
-from sklearn.svm import SVC
-from sklearn import metrics
-from pickle import dump
-import joblib
-import altair as alt
+from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import accuracy_score
+from sklearn.preprocessing import LabelEncoder 
 
-st.sidebar.title('CEK !!!!')
+# display
+# st.set_page_config(layout='wide')
+st.set_page_config(page_title="weather play tennis")
+
+st.title("UAS PENDAT")
+st.write("By: Akhmad Amanulloh (20041110099)")
 dataframe, preporcessing, modeling, implementation = st.tabs(
     ["Data", "Prepocessing", "Modeling", "Implementation"])
 
 with dataframe:
-    url = "https://www.kaggle.com/datasets/prathamtripathi/drug-classification"
+    url = "https://www.kaggle.com/datasets/pranavpandey2511/tennis-weather"
     st.markdown(
         f'[Dataset]({url})')
-    st.write('Obat yang cocok sesuai...')
+    st.write('Cuaca yang cocok untuk bermain tennis')
 
-    dt = pd.read_csv('https://raw.githubusercontent.com/zakkiya/dataminingProject/master/drug200%20(1).csv')
+    dt = pd.read_csv('https://raw.githubusercontent.com/akhmadamanulloh/main/main/tennis.csv')
     st.dataframe(dt)
     with preporcessing:
-        preporcessing, ket = st.tabs(['preporcessing', 'Ket preporcessing'])
+        preporcessingg, ket = st.tabs(['preporcessing', 'Ket preporcessing'])
         with ket:
             st.write("""
                     Keterangan:
                     * 0 : Tidak 
                     * 1 : Iya
                     """)
-        with preporcessing:
-            X = dt.drop('Drug',axis=1)
-            y = dt['Drug']
-            age = dt[["Age"]]
-            X
-
-            # Normalisasi MinMax
-            scaler = MinMaxScaler()
-            scaled = scaler.fit_transform(age)
-            features_names = age.columns.copy()
-            scaled_features = pd.DataFrame(scaled,columns=features_names)
-            dt["Age"] = scaled
-            dt
-
-            # Splitting Data
-            X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.5,random_state=1)
+        with preporcessingg:
+            dt['outlook'].unique()
+            dt_dum=pd.get_dummies(data=dt,columns=['temp','outlook','humidity','windy'])
+            dt_dum
     with modeling:
-        # x = dt.drop('Drug',axis=1)
-        # y = dt[['Drug']].values
-        # # split data
-        # X_train, X_test, y_train, y_test = train_test_split(
-        # X, y, train_size=0.5,random_state=1)
-
-        X = dt.drop('Drug',axis=1)
-        y = dt['Drug']
-        age = dt[["Age"]]
-        X
-        # Normalisasi MinMax
-        scaler = MinMaxScaler()
-        scaled = scaler.fit_transform(age)
-        features_names = age.columns.copy() 
-        scaled_features = pd.DataFrame(scaled,columns=features_names)
-        dt["Age"] = scaled
-        dt
-
-        from sklearn import preprocessing
-        le = preprocessing.LabelEncoder()
-        le.fit(y)
-
-        ybaru = le.transform(y)
-        ybaru
-        # Splitting Data
-        X_train, X_test, y_train, y_test = train_test_split(X, ybaru, train_size=0.5,random_state=1)
-
+        X = dt_dum.drop('play',axis=1)
+        y = dt_dum['play']
+        # split data
+        X_train, X_test, y_train, y_test = train_test_split(
+        X, y, train_size=0.5,random_state=1)
         mlpc, knc, dtc = st.tabs(
         ["MLPClassifier", "KNeighborsClassifier", "DecisionTreeClassifier"])
         with mlpc:
@@ -110,37 +77,31 @@ with dataframe:
             st.success(f'akurasi terhadap data test = {akurasi_d3}')
             st.dataframe(label_d3)
     with implementation:
-         data = pd.read_csv('https://raw.githubusercontent.com/zakkiya/dataminingProject/master/drug200%20(1).csv')
+        tema = st.selectbox('Temperatur', ['cool', 'hot', 'mild'])
+        temp_cool = 1 if tema == 'cool' else 0
+        temp_hot = 1 if tema == 'hot' else 0
+        temp_mild = 1 if tema == 'mild' else 0
 
-         x = data.drop(columns='Drug')
-         x
+        outlook = st.selectbox('outlook', ['overcast', 'rainy', 'sunny'])
+        outlook_overcast = 1 if outlook == 'overcast' else 0
+        outlook_rainy = 1 if outlook == 'rainy' else 0
+        outlook_sunny = 1 if outlook == 'sunny' else 0
 
-         y = data['Drug'].values
-         y
+        humidity = st.selectbox('humidity', ['high', 'normal'])
+        humidity_high = 1 if humidity == 'high' else 0
+        humidity_normal = 1 if humidity == 'normal' else 0
 
-         #normalisasi
+        windy = st.selectbox('windy', ['False', 'True'])
+        windy_False = 1 if windy == 'False' else 0
+        windy_True = 1 if windy == 'True' else 0
 
-        # tema = st.selectbox('Sex', ['F', 'M'])
-        # temp_F = 1 if tema == 'F' else 0
-        # temp_M = 1 if tema == 'M' else 0
-
-        # outlook = st.selectbox('BP', ['HIGH', 'LOW', 'NORMAL'])
-        # outlook_HIGH = 1 if outlook == 'HIGH' else 0
-        # outlook_LOW = 1 if outlook == 'LOW' else 0
-        # outlook_NORMAL = 1 if outlook == 'NORMAL' else 0
-
-        # humidity = st.selectbox('Cholesterol', ['HIGH', 'NORMAL'])
-        # humidity_HIGH = 1 if humidity == 'HIGH' else 0
-        # humidity_NORMAL = 1 if humidity == 'NORMAL' else 0
-
-        # # data = np.array([[temp_F,temp_M,outlook_HIGH,outlook_LOW,outlook_NORMAL,humidity_HIGH,humidity_NORMAL]])
-        # data = [tema,]
-        # model = st.selectbox('Pilih Model', ['MLPC', 'KNN', 'DTREE'])
-        # if model == 'MLPC':
-        #     y_imp = clf.predict(data)
-        # elif model == 'KNN':
-        #     y_imp = knn.predict(data)
-        # else :
-        #     y_imp = classifier.predict(data)
-        # st.success(f'Model yang dipilih = {model}')
-        # st.success(f'Data Predict = {y_imp}')
+        data = np.array([[temp_cool,temp_hot,temp_mild,outlook_overcast,outlook_rainy,outlook_sunny,humidity_high,humidity_normal,windy_False,windy_True]])
+        model = st.selectbox('Pilih Model', ['MLPC', 'KNN', 'DTREE'])
+        if model == 'MLPC':
+            y_imp = clf.predict(data)
+        elif model == 'KNN':
+            y_imp = knn.predict(data)
+        else:
+            y_imp = classifier.predict(data)
+        st.success(f'Model yang dipilih = {model}')
+        st.success(f'Data Predict = {y_imp}')
